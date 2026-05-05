@@ -102,17 +102,56 @@
                                     {% endif %}
                         </td>
                         <td>
-                            <form method="POST" action="{{ url_for('delete_item_route', item_id=item.id) }}"
-                                style="display:inline;" onsubmit="return confirm('Удалить позицию {{ item.name }}?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
+                            <div class="btn-group btn-group-sm">
+                                <!-- Кнопка быстрого добавления -->
+                                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                                    data-bs-target="#quickAddModal" data-item-id="{{ item.id }}"
+                                    data-item-name="{{ item.name }}" title="Добавить на склад">
+                                    <i class="bi bi-plus-circle"></i>
                                 </button>
-                            </form>
+                                <!-- Кнопка удаления -->
+                                <form method="POST" action="{{ url_for('delete_item_route', item_id=item.id) }}"
+                                    style="display:inline;"
+                                    onsubmit="return confirm('Удалить позицию {{ item.name }}?');">
+                                    <button type="submit" class="btn btn-outline-danger" title="Удалить">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для быстрого добавления -->
+<div class="modal fade" id="quickAddModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('add_to_warehouse') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Быстрое добавление на склад</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="item_id" id="quickAddItemId">
+                    <p>Позиция: <strong id="quickAddItemName"></strong></p>
+                    <div class="mb-3">
+                        <label for="quickAddQuantity" class="form-label">Количество</label>
+                        <input type="number" class="form-control" id="quickAddQuantity" name="quantity" min="1"
+                            required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Добавить
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -126,5 +165,17 @@
             div.style.display = 'none';
         }
     }
+
+    // Заполнение модального окна
+    document.getElementById('quickAddModal').addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var itemId = button.getAttribute('data-item-id');
+        var itemName = button.getAttribute('data-item-name');
+
+        document.getElementById('quickAddItemId').value = itemId;
+        document.getElementById('quickAddItemName').textContent = itemName;
+        document.getElementById('quickAddQuantity').value = '';
+        document.getElementById('quickAddQuantity').focus();
+    });
 </script>
 {% endblock %}

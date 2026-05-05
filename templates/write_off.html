@@ -4,7 +4,7 @@
 <div class="row">
     <div class="col-md-8 mx-auto">
         <h2><i class="bi bi-dash-circle"></i> Списание расходных материалов</h2>
-        
+
         <div class="card mt-3">
             <div class="card-body">
                 <form method="POST" id="writeOffForm">
@@ -15,23 +15,22 @@
                                 <option value="">Выберите позицию...</option>
                                 {% for item in items %}
                                 <option value="{{ item.id }}" data-quantity="{{ item.quantity }}">
-                                    {{ item.category_name }} - {{ item.name }} 
+                                    {{ item.category_name }} - {{ item.name }}
                                     (в наличии: {{ item.quantity }})
                                 </option>
                                 {% endfor %}
                             </select>
                         </div>
-                        
+
                         <div class="col-md-3 mb-3">
                             <label for="quantity" class="form-label">Количество *</label>
-                            <input type="number" class="form-control" id="quantity" name="quantity" 
-                                   min="1" required>
+                            <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
                         </div>
-                        
+
                         <div class="col-md-3 mb-3">
                             <label for="point_id" class="form-label">Кому списали</label>
-                            <select class="form-select" id="point_id" name="point_id" 
-                                    onchange="toggleNewPoint(this.value)">
+                            <select class="form-select" id="point_id" name="point_id"
+                                onchange="toggleNewPoint(this.value)">
                                 <option value="">Выберите...</option>
                                 {% for point in points %}
                                 <option value="{{ point.id }}">{{ point.name }}</option>
@@ -40,17 +39,17 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3" id="new_point_div" style="display:none;">
                         <label for="new_point" class="form-label">Название новой точки списания</label>
                         <input type="text" class="form-control" id="new_point" name="new_point">
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="description" class="form-label">Причина списания</label>
                         <textarea class="form-control" id="description" name="description" rows="2"></textarea>
                     </div>
-                    
+
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-dash-circle"></i> Списать
                     </button>
@@ -61,17 +60,17 @@
 </div>
 
 <script>
-function toggleNewPoint(value) {
-    var div = document.getElementById('new_point_div');
-    var input = document.getElementById('new_point');
-    
-    if (value === 'new') {
-        div.style.display = 'block';
-        input.required = true;
-    } else {
-        div.style.display = 'none';
-        input.required = false;
+    function toggleNewPoint(value) {
+        var div = document.getElementById('new_point_div');
+        var input = document.getElementById('new_point');
+
+        if (value === 'new') {
+            div.style.display = 'block';
+            input.required = true;
+        } else {
+            div.style.display = 'none';
+            input.required = false;
+        }
     }
-}
 </script>
 {% endblock %}

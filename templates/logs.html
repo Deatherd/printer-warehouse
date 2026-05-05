@@ -46,6 +46,10 @@
                     </form>
                 </td>
             </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="text-center">Логи операций пусты</td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
