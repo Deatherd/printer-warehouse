@@ -11,11 +11,8 @@ services:
       - ./data:/app/data
       # Монтируем шаблоны для hot-reload (опционально, для разработки)
       - ./templates:/app/templates
-    environment:
-      - FLASK_ENV=development
-      - FLASK_DEBUG=1
-      - SECRET_KEY=your-production-secret-key-change-this
-      - DATABASE_PATH=/app/data/inventory.db
+    env_file:
+      - warehouse.env
     restart: unless-stopped
     networks:
       - printer-network
