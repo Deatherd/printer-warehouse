@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  printer-inventory:
+    build: .
+    container_name: printer_inventory
+    ports:
+      - "5000:5000"
+    volumes:
+      # Монтируем базу данных для сохранения данных между перезапусками
+      - ./data:/app/data
+      # Монтируем шаблоны для hot-reload (опционально, для разработки)
+      - ./templates:/app/templates
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - SECRET_KEY=your-production-secret-key-change-this
+      - DATABASE_PATH=/app/data/inventory.db
+    restart: unless-stopped
+    networks:
+      - printer-network
+
+  # Опционально: добавляем Nginx для продакшена
+  nginx:
+    image: nginx:alpine
+    container_name: printer_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./static:/app/static:ro
+    depends_on:
+      - printer-inventory
+    restart: unless-stopped
+    networks:
+      - printer-network
+    profiles:
+      - production  # Включается только с профилем production
+
+networks:
+  printer-network:
+    driver: bridge
