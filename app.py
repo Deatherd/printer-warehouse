@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from database import init_db, get_db, register_user, verify_user, get_user_by_id
+from database import init_db, get_db, register_user, verify_user, get_user_by_id, get_all_users
 from models import User
 from datetime import datetime
 
@@ -361,6 +361,45 @@ def low_stock_api():
     conn.close()
     
     return jsonify(items)
+
+@app.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        registration_code = request.form.get('registration_code')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # Проверки
+        if not all([username, registration_code, new_password, confirm_password]):
+            flash('Заполните все поля', 'error')
+            return render_template('reset_password.html')
+        
+        if new_password != confirm_password:
+            flash('Пароли не совпадают', 'error')
+            return render_template('reset_password.html')
+        
+        if len(new_password) < 4:
+            flash('Пароль должен содержать минимум 4 символа', 'error')
+            return render_template('reset_password.html')
+        
+        # Сбрасываем пароль
+        success, message = reset_password(username, registration_code, new_password)
+        
+        if success:
+            flash(message, 'success')
+            return redirect(url_for('login'))
+        else:
+            flash(message, 'error')
+    
+    return render_template('reset_password.html')
+
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    """Страница управления пользователями (только для админов)"""
+    users = get_all_users()
+    return render_template('admin_users.html', users=users)
 
 # Обработчик ошибок
 @app.errorhandler(404)
