@@ -225,6 +225,14 @@ def add_write_off_point(name):
     finally:
         conn.close()
 
+def rename_item(item_id, new_name):
+    """Переименовать позицию"""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE items SET name = ? WHERE id = ?', (new_name, item_id))
+    conn.commit()
+    conn.close()
+
 def delete_write_off_point(point_id):
     conn = get_db()
     cursor = conn.cursor()

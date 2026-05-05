@@ -397,6 +397,18 @@ def low_stock_api():
     
     return jsonify(items)
 
+@app.route('/rename-item/<int:item_id>', methods=['POST'])
+@login_required
+def rename_item_route(item_id):
+    new_name = request.form.get('new_name')
+    if not new_name:
+        flash('Введите новое название', 'error')
+        return redirect(url_for('warehouse'))
+    
+    rename_item(item_id, new_name)
+    flash('Позиция переименована', 'success')
+    return redirect(url_for('warehouse'))
+
 @app.route('/admin/users')
 @login_required
 def admin_users():

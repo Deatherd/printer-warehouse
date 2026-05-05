@@ -103,13 +103,16 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <!-- Кнопка быстрого добавления -->
                                 <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
                                     data-bs-target="#quickAddModal" data-item-id="{{ item.id }}"
                                     data-item-name="{{ item.name }}" title="Добавить на склад">
                                     <i class="bi bi-plus-circle"></i>
                                 </button>
-                                <!-- Кнопка удаления -->
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
+                                    data-bs-target="#renameModal" data-item-id="{{ item.id }}"
+                                    data-item-name="{{ item.name }}" title="Переименовать">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
                                 <form method="POST" action="{{ url_for('delete_item_route', item_id=item.id) }}"
                                     style="display:inline;"
                                     onsubmit="return confirm('Удалить позицию {{ item.name }}?');">
@@ -127,7 +130,7 @@
     </div>
 </div>
 
-<!-- Модальное окно для быстрого добавления -->
+<!-- Модальное окно быстрого добавления -->
 <div class="modal fade" id="quickAddModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -156,6 +159,35 @@
     </div>
 </div>
 
+<!-- Модальное окно переименования -->
+<div class="modal fade" id="renameModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="renameForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Переименовать позицию</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="new_name" class="form-label">Новое название</label>
+                        <input type="text" class="form-control" id="new_name" name="new_name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
 <script>
     function toggleNewCategory(value) {
         var div = document.getElementById('new_category_div');
@@ -166,16 +198,33 @@
         }
     }
 
-    // Заполнение модального окна
-    document.getElementById('quickAddModal').addEventListener('show.bs.modal', function (event) {
-        var button = event.relatedTarget;
-        var itemId = button.getAttribute('data-item-id');
-        var itemName = button.getAttribute('data-item-name');
+    // Заполнение модального окна быстрого добавления
+    var quickAddModal = document.getElementById('quickAddModal');
+    if (quickAddModal) {
+        quickAddModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var itemId = button.getAttribute('data-item-id');
+            var itemName = button.getAttribute('data-item-name');
 
-        document.getElementById('quickAddItemId').value = itemId;
-        document.getElementById('quickAddItemName').textContent = itemName;
-        document.getElementById('quickAddQuantity').value = '';
-        document.getElementById('quickAddQuantity').focus();
-    });
+            document.getElementById('quickAddItemId').value = itemId;
+            document.getElementById('quickAddItemName').textContent = itemName;
+            document.getElementById('quickAddQuantity').value = '';
+            document.getElementById('quickAddQuantity').focus();
+        });
+    }
+
+    // Заполнение модального окна переименования
+    var renameModal = document.getElementById('renameModal');
+    if (renameModal) {
+        renameModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var itemId = button.getAttribute('data-item-id');
+            var itemName = button.getAttribute('data-item-name');
+
+            document.getElementById('new_name').value = itemName;
+            document.getElementById('renameForm').action = '/rename-item/' + itemId;
+            document.getElementById('new_name').focus();
+        });
+    }
 </script>
 {% endblock %}
