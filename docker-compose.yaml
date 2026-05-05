@@ -1,40 +1,18 @@
 version: '3.8'
 
 services:
-  printer-inventory:
+  app:
     build: .
     container_name: printer_inventory
     ports:
       - "5000:5000"
     volumes:
-      # Монтируем базу данных для сохранения данных между перезапусками
-      - ./data:/app/data
-      # Монтируем шаблоны для hot-reload (опционально, для разработки)
+      - printer_data:/app/data
       - ./templates:/app/templates
     env_file:
       - warehouse.env
     restart: unless-stopped
-    networks:
-      - printer-network
 
-  # Опционально: добавляем Nginx для продакшена
-  nginx:
-    image: nginx:alpine
-    container_name: printer_nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./static:/app/static:ro
-    depends_on:
-      - printer-inventory
-    restart: unless-stopped
-    networks:
-      - printer-network
-    profiles:
-      - production  # Включается только с профилем production
-
-networks:
-  printer-network:
-    driver: bridge
+volumes:
+  printer_data:
+    driver: local
