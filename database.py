@@ -6,7 +6,6 @@ DATABASE = os.environ.get('DATABASE_PATH', 'inventory.db')
 REGISTRATION_CODE = '420300'
 
 def get_db():
-    # Создаем директорию для базы данных, если её нет
     db_dir = os.path.dirname(DATABASE)
     if db_dir and not os.path.exists(db_dir):
         try:
@@ -47,6 +46,14 @@ def init_db():
     ''')
     
     cursor.execute('''
+        CREATE TABLE IF NOT EXISTS write_off_points (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -54,7 +61,7 @@ def init_db():
             quantity INTEGER DEFAULT 0,
             min_quantity INTEGER DEFAULT 5,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (category_id) REFERENCES categories (id)
+            FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
         )
     ''')
     
@@ -63,12 +70,14 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             item_id INTEGER,
+            write_off_point_id INTEGER,
             operation_type TEXT NOT NULL,
             quantity INTEGER,
             description TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id),
-            FOREIGN KEY (item_id) REFERENCES items (id)
+            FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE SET NULL,
+            FOREIGN KEY (write_off_point_id) REFERENCES write_off_points (id) ON DELETE SET NULL
         )
     ''')
     
@@ -118,7 +127,6 @@ def get_user_by_id(user_id):
     return None
 
 def reset_password(username, registration_code, new_password):
-    """Сброс пароля пользователя по коду регистрации"""
     if registration_code != REGISTRATION_CODE:
         return False, "Неверный код регистрации"
     
@@ -147,10 +155,80 @@ def reset_password(username, registration_code, new_password):
     return True, f"Пароль пользователя {username} успешно изменен"
 
 def get_all_users():
-    """Получить список всех пользователей"""
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('SELECT id, username, created_at FROM users ORDER BY username')
     users = cursor.fetchall()
     conn.close()
     return users
+
+def get_all_items():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT i.*, COALESCE(c.name, 'Без категории') as category_name
+        FROM items i
+        LEFT JOIN categories c ON i.category_id = c.id
+        ORDER BY c.name, i.name
+    ''')
+    items = cursor.fetchall()
+    conn.close()
+    return items
+
+def get_all_categories():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM categories ORDER BY name')
+    categories = cursor.fetchall()
+    conn.close()
+    return categories
+
+def delete_item(item_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM items WHERE id = ?', (item_id,))
+    conn.commit()
+    conn.close()
+
+def delete_category(category_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE items SET category_id = NULL WHERE category_id = ?', (category_id,))
+    cursor.execute('DELETE FROM categories WHERE id = ?', (category_id,))
+    conn.commit()
+    conn.close()
+
+def delete_log(log_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM operations_log WHERE id = ?', (log_id,))
+    conn.commit()
+    conn.close()
+
+def get_all_write_off_points():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM write_off_points ORDER BY name')
+    points = cursor.fetchall()
+    conn.close()
+    return points
+
+def add_write_off_point(name):
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('INSERT INTO write_off_points (name) VALUES (?)', (name,))
+        conn.commit()
+        return cursor.lastrowid
+    except sqlite3.IntegrityError:
+        return None
+    finally:
+        conn.close()
+
+def delete_write_off_point(point_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE operations_log SET write_off_point_id = NULL WHERE write_off_point_id = ?', (point_id,))
+    cursor.execute('DELETE FROM write_off_points WHERE id = ?', (point_id,))
+    conn.commit()
+    conn.close()

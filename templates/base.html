@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Учет расходных материалов</title>
+    <title>PrintKeeper - Учет расходников</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
@@ -16,19 +16,8 @@
             background-color: #f8d7da;
         }
 
-        .nav-item {
-            margin-right: 10px;
-        }
-
         .flash-messages {
             margin-top: 20px;
-        }
-
-        .footer {
-            margin-top: 50px;
-            padding: 20px 0;
-            background-color: #f8f9fa;
-            border-top: 1px solid #dee2e6;
         }
     </style>
 </head>
@@ -36,7 +25,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <a class="navbar-brand" href="{{ url_for('write_off') }}">
                 <i class="bi bi-printer"></i> PrintKeeper
             </a>
             {% if current_user.is_authenticated %}
@@ -46,23 +35,18 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('write_off') }}">
+                            <i class="bi bi-dash-circle"></i> Списание
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('warehouse') }}">
+                            <i class="bi bi-box-seam"></i> Склад
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('dashboard') }}">
                             <i class="bi bi-speedometer2"></i> Дашборд
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('add_to_warehouse') }}">
-                            <i class="bi bi-plus-circle"></i> Добавить на склад
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('write_off') }}">
-                            <i class="bi bi-dash-circle"></i> Списать
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('add_item') }}">
-                            <i class="bi bi-box-seam"></i> Новая позиция
                         </a>
                     </li>
                     <li class="nav-item">
@@ -70,38 +54,24 @@
                             <i class="bi bi-clock-history"></i> Логи
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="https://github.com/Deatherd/printer-warehouse" target="_blank"
-                            title="Исходный код на GitHub">
-                            <i class="bi bi-github"></i> GitHub
-                        </a>
-                    </li>
-                    {% if current_user.is_authenticated and current_user.username == 'admin' %}
+                    {% if current_user.username == 'admin' %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-gear"></i> Администрирование
+                            data-bs-toggle="dropdown">
+                            <i class="bi bi-gear"></i> Админ
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('admin_users') }}">
-                                    <i class="bi bi-people"></i> Пользователи
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('reset_password') }}">
-                                    <i class="bi bi-key"></i> Сброс пароля
-                                </a>
-                            </li>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('admin_users') }}">
+                                    <i class="bi bi-people"></i> Пользователи</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reset_password_route') }}">
+                                    <i class="bi bi-key"></i> Сброс пароля</a></li>
                         </ul>
                     </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <span class="nav-link">
-                            <i class="bi bi-person"></i> {{ current_user.username }}
-                        </span>
+                        <span class="nav-link"><i class="bi bi-person"></i> {{ current_user.username }}</span>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('logout') }}">
@@ -115,39 +85,19 @@
     </nav>
 
     <div class="container mt-4">
-        <div class="flash-messages">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show"
-                role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
 
         {% block content %}{% endblock %}
     </div>
-
-    <!-- Футер -->
-    <footer class="footer mt-auto">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6 text-center text-md-start">
-                    <span class="text-muted">© 2024 PrintKeeper - Система учета расходных материалов</span>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <a href="https://github.com/Deatherd/printer-warehouse" class="text-muted text-decoration-none"
-                        target="_blank">
-                        <i class="bi bi-github"></i> GitHub
-                    </a>
-                </div>
-            </div>
-        </div>
-    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}{% endblock %}

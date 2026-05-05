@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="bi bi-box-seam"></i> Склад расходных материалов</h2>
+
+<!-- Форма добавления на склад -->
+<div class="card mt-3 mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Добавить на склад</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('add_to_warehouse') }}" class="row g-3">
+            <div class="col-md-6">
+                <select class="form-select" name="item_id" required>
+                    <option value="">Выберите позицию...</option>
+                    {% for item in items %}
+                    <option value="{{ item.id }}">
+                        {{ item.category_name }} - {{ item.name }} ({{ item.quantity }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="number" class="form-control" name="quantity" placeholder="Количество" min="1" required>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-plus-circle"></i> Добавить
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Форма добавления новой позиции -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Новая позиция</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('add_item') }}" class="row g-3">
+            <div class="col-md-3">
+                <select class="form-select" name="category_id" onchange="toggleNewCategory(this.value)">
+                    <option value="">Категория...</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                    <option value="new">+ Новая</option>
+                </select>
+            </div>
+            <div class="col-md-2" id="new_category_div" style="display:none;">
+                <input type="text" class="form-control" name="new_category" placeholder="Новая категория">
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="name" placeholder="Название" required>
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="quantity" placeholder="Кол-во" value="0">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-plus"></i> Добавить
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Список позиций -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Все позиции</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Категория</th>
+                        <th>Название</th>
+                        <th>Количество</th>
+                        <th>Мин. остаток</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr
+                        class="{{ 'table-danger' if item.quantity < 0 else 'table-warning' if item.quantity <= item.min_quantity else '' }}">
+                        <td>{{ item.category_name }}</td>
+                        <td>{{ item.name }}</td>
+                        <td><strong>{{ item.quantity }}</strong></td>
+                        <td>{{ item.min_quantity }}</td>
+                        <td>
+                            {% if item.quantity < 0 %} <span class="badge bg-danger">Отрицательный!</span>
+                                {% elif item.quantity == 0 %}
+                                <span class="badge bg-danger">Закончился</span>
+                                {% elif item.quantity <= item.min_quantity %} <span class="badge bg-warning">Мало</span>
+                                    {% else %}
+                                    <span class="badge bg-success">В норме</span>
+                                    {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('delete_item_route', item_id=item.id) }}"
+                                style="display:inline;" onsubmit="return confirm('Удалить позицию {{ item.name }}?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleNewCategory(value) {
+        var div = document.getElementById('new_category_div');
+        if (value === 'new') {
+            div.style.display = 'block';
+        } else {
+            div.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}
