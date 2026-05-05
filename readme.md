@@ -26,5 +26,5 @@
 
 1. Клонируйте репозиторий:
 ```bash
-git clone https://github.com/your-username/printkeeper.git
-cd printkeeper
+git clone https://github.com/Deatherd/printer-warehouse.git
+cd printer-warehouse
