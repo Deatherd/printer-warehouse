@@ -16,7 +16,6 @@
                                 {% for item in items %}
                                 <option value="{{ item.id }}" data-quantity="{{ item.quantity }}">
                                     {{ item.category_name }} - {{ item.name }}
-                                    (в наличии: {{ item.quantity }})
                                 </option>
                                 {% endfor %}
                             </select>
