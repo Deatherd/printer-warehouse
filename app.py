@@ -1,3 +1,11 @@
+import pkgutil
+import importlib
+import os
+
+# Исправление для совместимости с новыми версиями Python
+if not hasattr(pkgutil, 'get_loader'):
+    pkgutil.get_loader = importlib.util.find_spec
+
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from database import init_db, get_db, register_user, verify_user, get_user_by_id, get_all_users
@@ -5,7 +13,7 @@ from models import User
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here-change-in-production'  # Измените на свой секретный ключ
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -27,8 +35,12 @@ def login():
         return redirect(url_for('dashboard'))
         
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if not username or not password:
+            flash('Введите логин и пароль', 'error')
+            return render_template('login.html')
         
         user = verify_user(username, password)
         if user:
@@ -47,9 +59,9 @@ def register():
         return redirect(url_for('dashboard'))
         
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        registration_code = request.form['registration_code']
+        username = request.form.get('username')
+        password = request.form.get('password')
+        registration_code = request.form.get('registration_code')
         
         if not username or not password:
             flash('Заполните все поля', 'error')
@@ -63,6 +75,39 @@ def register():
             flash(message, 'error')
     
     return render_template('register.html')
+
+@app.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        registration_code = request.form.get('registration_code')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # Проверки
+        if not all([username, registration_code, new_password, confirm_password]):
+            flash('Заполните все поля', 'error')
+            return render_template('reset_password.html')
+        
+        if new_password != confirm_password:
+            flash('Пароли не совпадают', 'error')
+            return render_template('reset_password.html')
+        
+        if len(new_password) < 4:
+            flash('Пароль должен содержать минимум 4 символа', 'error')
+            return render_template('reset_password.html')
+        
+        # Импортируем функцию сброса пароля
+        from database import reset_password as do_reset_password
+        success, message = do_reset_password(username, registration_code, new_password)
+        
+        if success:
+            flash(message, 'success')
+            return redirect(url_for('login'))
+        else:
+            flash(message, 'error')
+    
+    return render_template('reset_password.html')
 
 @app.route('/logout')
 @login_required
@@ -362,38 +407,6 @@ def low_stock_api():
     
     return jsonify(items)
 
-@app.route('/reset-password', methods=['GET', 'POST'])
-def reset_password():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        registration_code = request.form.get('registration_code')
-        new_password = request.form.get('new_password')
-        confirm_password = request.form.get('confirm_password')
-        
-        # Проверки
-        if not all([username, registration_code, new_password, confirm_password]):
-            flash('Заполните все поля', 'error')
-            return render_template('reset_password.html')
-        
-        if new_password != confirm_password:
-            flash('Пароли не совпадают', 'error')
-            return render_template('reset_password.html')
-        
-        if len(new_password) < 4:
-            flash('Пароль должен содержать минимум 4 символа', 'error')
-            return render_template('reset_password.html')
-        
-        # Сбрасываем пароль
-        success, message = reset_password(username, registration_code, new_password)
-        
-        if success:
-            flash(message, 'success')
-            return redirect(url_for('login'))
-        else:
-            flash(message, 'error')
-    
-    return render_template('reset_password.html')
-
 @app.route('/admin/users')
 @login_required
 def admin_users():
@@ -401,7 +414,6 @@ def admin_users():
     users = get_all_users()
     return render_template('admin_users.html', users=users)
 
-# Обработчик ошибок
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('base.html', error='Страница не найдена'), 404
@@ -409,14 +421,8 @@ def not_found_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     return render_template('base.html', error='Внутренняя ошибка сервера'), 500
-# В начале файла добавьте:
-import os
 
-app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
-
-# В конце файла измените запуск:
 if __name__ == '__main__':
     init_db()
-    # В продакшене используйте debug=False
     debug_mode = os.environ.get('FLASK_DEBUG', '0') == '1'
     app.run(debug=debug_mode, host='0.0.0.0', port=5000)

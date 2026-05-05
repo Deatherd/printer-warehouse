@@ -6,15 +6,29 @@ DATABASE = os.environ.get('DATABASE_PATH', 'inventory.db')
 REGISTRATION_CODE = '420300'
 
 def get_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    # Создаем директорию для базы данных, если её нет
+    db_dir = os.path.dirname(DATABASE)
+    if db_dir and not os.path.exists(db_dir):
+        try:
+            os.makedirs(db_dir, exist_ok=True)
+            os.chmod(db_dir, 0o777)
+        except Exception as e:
+            print(f"Warning: Could not create directory {db_dir}: {e}")
+    
+    try:
+        conn = sqlite3.connect(DATABASE)
+        conn.row_factory = sqlite3.Row
+        return conn
+    except sqlite3.OperationalError:
+        fallback_db = 'inventory.db'
+        conn = sqlite3.connect(fallback_db)
+        conn.row_factory = sqlite3.Row
+        return conn
 
 def init_db():
     conn = get_db()
     cursor = conn.cursor()
     
-    # Таблица пользователей
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +38,6 @@ def init_db():
         )
     ''')
     
-    # Таблица групп позиций
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,7 +46,6 @@ def init_db():
         )
     ''')
     
-    # Таблица расходных материалов
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,7 +58,6 @@ def init_db():
         )
     ''')
     
-    # Таблица логов операций
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS operations_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,13 +82,11 @@ def register_user(username, password, registration_code):
     conn = get_db()
     cursor = conn.cursor()
     
-    # Проверяем, существует ли пользователь
     cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
     if cursor.fetchone():
         conn.close()
         return False, "Пользователь уже существует"
     
-    # Создаем пользователя
     password_hash = generate_password_hash(password)
     cursor.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)',
                    (username, password_hash))
@@ -116,7 +125,6 @@ def reset_password(username, registration_code, new_password):
     conn = get_db()
     cursor = conn.cursor()
     
-    # Проверяем, существует ли пользователь
     cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
     user = cursor.fetchone()
     
@@ -124,12 +132,10 @@ def reset_password(username, registration_code, new_password):
         conn.close()
         return False, "Пользователь не найден"
     
-    # Обновляем пароль
     password_hash = generate_password_hash(new_password)
     cursor.execute('UPDATE users SET password_hash = ? WHERE username = ?', 
                    (password_hash, username))
     
-    # Записываем в лог операций
     cursor.execute('''
         INSERT INTO operations_log 
         (user_id, item_id, operation_type, quantity, description) 
