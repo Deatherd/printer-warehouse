@@ -8,14 +8,30 @@
         <div class="card mt-3">
             <div class="card-body">
                 <form method="POST" id="writeOffForm">
+                    <!-- Категория -->
+                    <div class="mb-3">
+                        <label for="category_filter" class="form-label">Категория</label>
+                        <select class="form-select" id="category_filter">
+                            <option value="all">Все категории</option>
+                            {% set categories = [] %}
+                            {% for item in items %}
+                            {% if item.category_name not in categories %}
+                            {% set _ = categories.append(item.category_name) %}
+                            <option value="{{ item.category_name }}">{{ item.category_name }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="item_id" class="form-label">Позиция *</label>
                             <select class="form-select" id="item_id" name="item_id" required>
-                                <option value="">Выберите позицию...</option>
+                                <option value="">Сначала выберите категорию</option>
                                 {% for item in items %}
-                                <option value="{{ item.id }}" data-quantity="{{ item.quantity }}">
-                                    {{ item.category_name }} - {{ item.name }}
+                                <option value="{{ item.id }}" data-category="{{ item.category_name }}"
+                                    data-quantity="{{ item.quantity }}">
+                                    {{ item.name }} (в наличии: {{ item.quantity }})
                                 </option>
                                 {% endfor %}
                             </select>
@@ -58,6 +74,9 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
 <script>
     function toggleNewPoint(value) {
         var div = document.getElementById('new_point_div');
@@ -71,5 +90,36 @@
             input.required = false;
         }
     }
+
+    // Фильтрация позиций по категории
+    document.getElementById('category_filter').addEventListener('change', function () {
+        var selectedCategory = this.value;
+        var select = document.getElementById('item_id');
+        var options = select.getElementsByTagName('option');
+
+        // Очищаем текущий выбор
+        select.value = '';
+
+        // Показываем/скрываем опции
+        var firstOption = true;
+        for (var i = 0; i < options.length; i++) {
+            var option = options[i];
+            var category = option.getAttribute('data-category');
+
+            if (option.value === '') {
+                // Первая опция "Выберите..."
+                if (selectedCategory === 'all') {
+                    option.text = 'Выберите позицию...';
+                } else {
+                    option.text = 'Выберите позицию в категории ' + selectedCategory;
+                }
+                option.style.display = '';
+            } else if (selectedCategory === 'all' || category === selectedCategory) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        }
+    });
 </script>
 {% endblock %}
