@@ -422,6 +422,58 @@ def not_found_error(error):
 def internal_error(error):
     return render_template('base.html', error='Внутренняя ошибка сервера'), 500
 
+@app.route('/test-login')
+def test_login():
+    """Тестовый маршрут для диагностики"""
+    try:
+        return render_template('login.html')
+    except Exception as e:
+        return f"""
+        <h1>Ошибка в шаблоне:</h1>
+        <pre>{str(e)}</pre>
+        <h2>Тип ошибки:</h2>
+        <pre>{type(e).__name__}</pre>
+        """
+
+@app.route('/test-simple')
+def test_simple():
+    """Простой тест без шаблона"""
+    return """
+    <h1>Сервер работает!</h1>
+    <p>Эта страница отображается без шаблонов.</p>
+    <a href='/login'>Перейти на /login</a>
+    """
+
+@app.route('/test-base')
+def test_base():
+    """Тест base.html"""
+    try:
+        return render_template('base.html')
+    except Exception as e:
+        return f"Ошибка base.html: {str(e)}"
+    
+@app.route('/test-minimal')
+def test_minimal():
+    return render_template('login_minimal.html')
+
+import os
+
+@app.route('/debug-info')
+def debug_info():
+    """Показывает информацию о путях"""
+    info = []
+    info.append(f"Текущая директория: {os.getcwd()}")
+    info.append(f"Есть папка templates: {os.path.exists('templates')}")
+    
+    if os.path.exists('templates'):
+        info.append(f"Файлы в templates: {os.listdir('templates')}")
+    
+    templates_path = os.path.join(os.path.dirname(__file__), 'templates')
+    info.append(f"Путь к templates: {templates_path}")
+    info.append(f"Существует путь: {os.path.exists(templates_path)}")
+    
+    return "<br>".join(info)
+
 if __name__ == '__main__':
     init_db()
     debug_mode = os.environ.get('FLASK_DEBUG', '0') == '1'
