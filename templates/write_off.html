@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Списание расходных материалов</h2>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="item_id" class="form-label">Выберите позицию для списания</label>
+                        <select class="form-select" id="item_id" name="item_id" required>
+                            <option value="">Выберите...</option>
+                            {% for item in items %}
+                            <option value="{{ item.id }}">
+                                {{ item.category_name or 'Без категории' }} - {{ item.name }}
+                                (в наличии: {{ item.quantity }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Количество для списания</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Причина списания (необязательно)</label>
+                        <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Списать</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

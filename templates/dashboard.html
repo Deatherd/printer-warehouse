@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Дашборд склада расходных материалов</h2>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Всего позиций</h5>
+                <p class="card-text display-4">{{ total_items }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Всего единиц</h5>
+                <p class="card-text display-4">{{ total_quantity }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Заканчиваются</h5>
+                <p class="card-text display-4">{{ low_stock|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if low_stock %}
+<div class="mt-4">
+    <h4>Позиции с низким остатком:</h4>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Категория</th>
+                    <th>Наименование</th>
+                    <th>Остаток</th>
+                    <th>Мин. остаток</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in low_stock %}
+                <tr class="{{ 'out-of-stock' if item.quantity == 0 else 'low-stock' }}">
+                    <td>{{ item.category_name or 'Без категории' }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.min_quantity }}</td>
+                    <td>
+                        {% if item.quantity == 0 %}
+                        <span class="badge bg-danger">Закончился</span>
+                        {% else %}
+                        <span class="badge bg-warning">Мало</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Добавление на склад</h2>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="item_id" class="form-label">Выберите позицию</label>
+                        <select class="form-select" id="item_id" name="item_id" required>
+                            <option value="">Выберите...</option>
+                            {% for item in items %}
+                            <option value="{{ item.id }}">
+                                {{ item.category_name or 'Без категории' }} - {{ item.name }}
+                                (текущий остаток: {{ item.quantity }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Количество</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Добавить на склад</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

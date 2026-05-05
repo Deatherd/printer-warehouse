@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Добавление новой позиции</h2>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">Категория</label>
+                        <select class="form-select" id="category_id" name="category_id"
+                            onchange="toggleNewCategory(this.value)">
+                            <option value="">Выберите категорию...</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                            <option value="new">+ Новая категория</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="new_category_div" style="display:none;">
+                        <label for="new_category" class="form-label">Название новой категории</label>
+                        <input type="text" class="form-control" id="new_category" name="new_category">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Наименование позиции</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Начальное количество</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" value="0" min="0">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="min_quantity" class="form-label">Минимальный остаток</label>
+                        <input type="number" class="form-control" id="min_quantity" name="min_quantity" value="5"
+                            min="1">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Добавить позицию</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleNewCategory(value) {
+        var newCategoryDiv = document.getElementById('new_category_div');
+        var newCategoryInput = document.getElementById('new_category');
+
+        if (value === 'new') {
+            newCategoryDiv.style.display = 'block';
+            newCategoryInput.required = true;
+        } else {
+            newCategoryDiv.style.display = 'none';
+            newCategoryInput.required = false;
+        }
+    }
+</script>
+{% endblock %}
